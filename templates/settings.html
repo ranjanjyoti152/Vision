@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0">
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-2xl font-semibold text-gray-900">System Settings</h1>
+        <p class="mt-1 text-sm text-gray-600">Manage your cameras and recording preferences</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Camera Management -->
+        <div class="bg-white rounded-lg shadow-sm">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Camera Management</h3>
+                
+                <!-- Add Camera Form -->
+                <div class="mt-6">
+                    <form id="add-camera-form" class="space-y-4">
+                        <div>
+                            <label for="camera-name" class="block text-sm font-medium text-gray-700">Camera Name</label>
+                            <input type="text" id="camera-name" name="name" required
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                   placeholder="Living Room Camera">
+                        </div>
+                        
+                        <div>
+                            <label for="rtsp-url" class="block text-sm font-medium text-gray-700">RTSP URL</label>
+                            <input type="text" id="rtsp-url" name="rtsp_url" required
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                   placeholder="rtsp://username:password@camera-ip:554/stream">
+                        </div>
+                        
+                        <button type="submit"
+                                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <i class="fas fa-plus mr-2"></i>
+                            Add Camera
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Camera List -->
+                <div class="mt-6">
+                    <h4 class="text-sm font-medium text-gray-900">Connected Cameras</h4>
+                    <div class="mt-2 divide-y divide-gray-200" id="camera-list">
+                        {% if not cameras %}
+                        <p class="py-4 text-sm text-gray-500">No cameras configured</p>
+                        {% else %}
+                        {% for camera in cameras %}
+                        <div class="py-4 flex items-center justify-between" id="camera-{{ camera.id }}">
+                            <div>
+                                <h5 class="text-sm font-medium text-gray-900">{{ camera.name }}</h5>
+                                <p class="text-sm text-gray-500">{{ camera.rtsp_url }}</p>
+                            </div>
+                            <button onclick="deleteCamera({{ camera.id }})"
+                                    class="ml-4 text-sm font-medium text-red-600 hover:text-red-500">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recording Settings -->
+        <div class="bg-white rounded-lg shadow-sm">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Recording Settings</h3>
+                
+                <form id="recording-settings-form" class="mt-6 space-y-4">
+                    <div>
+                        <label for="storage-dir" class="block text-sm font-medium text-gray-700">Storage Directory</label>
+                        <input type="text" id="storage-dir" name="storage_directory"
+                               value="{{ settings.storage_directory }}"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <p class="mt-1 text-sm text-gray-500">Directory where recordings will be stored</p>
+                    </div>
+                    
+                    <div>
+                        <label for="retention-days" class="block text-sm font-medium text-gray-700">Retention Period (Days)</label>
+                        <input type="number" id="retention-days" name="retention_days"
+                               value="{{ settings.retention_days }}" min="1"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <p class="mt-1 text-sm text-gray-500">Number of days to keep recordings before automatic deletion</p>
+                    </div>
+                    
+                    <button type="submit"
+                            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <i class="fas fa-save mr-2"></i>
+                        Save Settings
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Add Camera Form Submission
+    document.getElementById('add-camera-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = {
+            name: document.getElementById('camera-name').value,
+            rtsp_url: document.getElementById('rtsp-url').value
+        };
+        
+        try {
+            const response = await fetch('/api/cameras', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+            
+            if (response.ok) {
+                showToast('Camera added successfully', 'success');
+                window.location.reload();
+            } else {
+                const data = await response.json();
+                throw new Error(data.error || 'Failed to add camera');
+            }
+        } catch (error) {
+            showToast(error.message, 'error');
+        }
+    });
+
+    // Delete Camera
+    async function deleteCamera(cameraId) {
+        if (!confirm('Are you sure you want to delete this camera?')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/cameras/${cameraId}`, {
+                method: 'DELETE'
+            });
+            
+            if (response.ok) {
+                showToast('Camera deleted successfully', 'success');
+                document.getElementById(`camera-${cameraId}`).remove();
+                
+                // If no cameras left, show the "No cameras" message
+                const cameraList = document.getElementById('camera-list');
+                if (cameraList.children.length === 0) {
+                    cameraList.innerHTML = '<p class="py-4 text-sm text-gray-500">No cameras configured</p>';
+                }
+            } else {
+                const data = await response.json();
+                throw new Error(data.error || 'Failed to delete camera');
+            }
+        } catch (error) {
+            showToast(error.message, 'error');
+        }
+    }
+
+    // Recording Settings Form Submission
+    document.getElementById('recording-settings-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = {
+            storage_directory: document.getElementById('storage-dir').value,
+            retention_days: parseInt(document.getElementById('retention-days').value)
+        };
+        
+        try {
+            const response = await fetch('/api/settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+            
+            if (response.ok) {
+                showToast('Settings updated successfully', 'success');
+            } else {
+                const data = await response.json();
+                throw new Error(data.error || 'Failed to update settings');
+            }
+        } catch (error) {
+            showToast(error.message, 'error');
+        }
+    });
+</script>
+{% endblock %}

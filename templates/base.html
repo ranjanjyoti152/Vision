@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NVR System - {% block title %}{% endblock %}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <i class="fas fa-video text-blue-500 text-2xl"></i>
+                        <span class="ml-2 text-xl font-semibold">NVR System</span>
+                    </div>
+                    <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                        <a href="{{ url_for('dashboard') }}" 
+                           class="{% if request.endpoint == 'dashboard' %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            <i class="fas fa-th-large mr-2"></i> Dashboard
+                        </a>
+                        <a href="{{ url_for('playback') }}"
+                           class="{% if request.endpoint == 'playback' %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            <i class="fas fa-play-circle mr-2"></i> Playback
+                        </a>
+                        <a href="{{ url_for('settings') }}"
+                           class="{% if request.endpoint == 'settings' %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            <i class="fas fa-cog mr-2"></i> Settings
+                        </a>
+                        <a href="{{ url_for('health') }}"
+                           class="{% if request.endpoint == 'health' %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            <i class="fas fa-heartbeat mr-2"></i> Health
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Navigation -->
+    <div class="sm:hidden bg-white border-t border-gray-200 fixed bottom-0 w-full">
+        <div class="grid grid-cols-4 gap-1">
+            <a href="{{ url_for('dashboard') }}" class="text-center py-4 {% if request.endpoint == 'dashboard' %}text-blue-500{% else %}text-gray-500{% endif %}">
+                <i class="fas fa-th-large block text-xl"></i>
+                <span class="text-xs">Dashboard</span>
+            </a>
+            <a href="{{ url_for('playback') }}" class="text-center py-4 {% if request.endpoint == 'playback' %}text-blue-500{% else %}text-gray-500{% endif %}">
+                <i class="fas fa-play-circle block text-xl"></i>
+                <span class="text-xs">Playback</span>
+            </a>
+            <a href="{{ url_for('settings') }}" class="text-center py-4 {% if request.endpoint == 'settings' %}text-blue-500{% else %}text-gray-500{% endif %}">
+                <i class="fas fa-cog block text-xl"></i>
+                <span class="text-xs">Settings</span>
+            </a>
+            <a href="{{ url_for('health') }}" class="text-center py-4 {% if request.endpoint == 'health' %}text-blue-500{% else %}text-gray-500{% endif %}">
+                <i class="fas fa-heartbeat block text-xl"></i>
+                <span class="text-xs">Health</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Toast Notifications -->
+    <div id="toast" class="fixed bottom-20 right-4 mb-4 hidden">
+        <div class="bg-white rounded-lg shadow-lg p-4 max-w-sm">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <i id="toast-icon" class="fas fa-info-circle text-blue-500"></i>
+                </div>
+                <div class="ml-3">
+                    <p id="toast-message" class="text-sm font-medium text-gray-900"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // Toast notification function
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            const toastIcon = document.getElementById('toast-icon');
+            
+            toastMessage.textContent = message;
+            
+            // Set icon and color based on type
+            switch(type) {
+                case 'success':
+                    toastIcon.className = 'fas fa-check-circle text-green-500';
+                    break;
+                case 'error':
+                    toastIcon.className = 'fas fa-exclamation-circle text-red-500';
+                    break;
+                default:
+                    toastIcon.className = 'fas fa-info-circle text-blue-500';
+            }
+            
+            toast.classList.remove('hidden');
+            
+            // Hide toast after 3 seconds
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+    </script>
+    
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

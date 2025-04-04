@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block title %}System Health{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0">
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-2xl font-semibold text-gray-900">System Health Monitor</h1>
+        <p class="mt-1 text-sm text-gray-600">Real-time system performance metrics</p>
+    </div>
+
+    <!-- Metrics Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- CPU Usage -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 rounded-md bg-blue-50 p-3">
+                    <i class="fas fa-microchip text-blue-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-sm font-medium text-gray-900">CPU Usage</h3>
+                    <div class="mt-1.5">
+                        <span id="cpu-usage" class="text-2xl font-semibold text-gray-900">0%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4">
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div id="cpu-bar" class="bg-blue-600 h-2 rounded-full" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Memory Usage -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 rounded-md bg-green-50 p-3">
+                    <i class="fas fa-memory text-green-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-sm font-medium text-gray-900">Memory Usage</h3>
+                    <div class="mt-1.5">
+                        <span id="memory-usage" class="text-2xl font-semibold text-gray-900">0%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4">
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div id="memory-bar" class="bg-green-600 h-2 rounded-full" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="mt-2 grid grid-cols-2 gap-4 text-sm">
+                <div class="text-gray-500">
+                    Used: <span id="memory-used" class="text-gray-900 font-medium">0 GB</span>
+                </div>
+                <div class="text-gray-500">
+                    Total: <span id="memory-total" class="text-gray-900 font-medium">0 GB</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Disk Usage -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 rounded-md bg-purple-50 p-3">
+                    <i class="fas fa-hdd text-purple-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-sm font-medium text-gray-900">Disk Usage</h3>
+                    <div class="mt-1.5">
+                        <span id="disk-usage" class="text-2xl font-semibold text-gray-900">0%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4">
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div id="disk-bar" class="bg-purple-600 h-2 rounded-full" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="mt-2 grid grid-cols-2 gap-4 text-sm">
+                <div class="text-gray-500">
+                    Used: <span id="disk-used" class="text-gray-900 font-medium">0 GB</span>
+                </div>
+                <div class="text-gray-500">
+                    Total: <span id="disk-total" class="text-gray-900 font-medium">0 GB</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Uptime -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 rounded-md bg-yellow-50 p-3">
+                    <i class="fas fa-clock text-yellow-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-sm font-medium text-gray-900">System Uptime</h3>
+                    <div class="mt-1.5">
+                        <span id="uptime" class="text-lg font-semibold text-gray-900">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4">
+                <p class="text-sm text-gray-500">
+                    Last Boot: <span id="last-boot" class="text-gray-900 font-medium">Loading...</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historical Graph -->
+    <div class="mt-6">
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Resource Usage History</h3>
+            <div class="h-64">
+                <canvas id="metrics-chart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    // Initialize Chart.js
+    const ctx = document.getElementById('metrics-chart').getContext('2d');
+    const metricsChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'CPU Usage',
+                borderColor: 'rgb(59, 130, 246)',
+                data: []
+            }, {
+                label: 'Memory Usage',
+                borderColor: 'rgb(16, 185, 129)',
+                data: []
+            }, {
+                label: 'Disk Usage',
+                borderColor: 'rgb(139, 92, 246)',
+                data: []
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: value => `${value}%`
+                    }
+                }
+            },
+            animation: {
+                duration: 0
+            }
+        }
+    });
+
+    // Format bytes to human readable format
+    function formatBytes(bytes) {
+        const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+        if (bytes === 0) return '0 B';
+        const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
+        return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i];
+    }
+
+    // Update metrics
+    async function updateMetrics() {
+        try {
+            const response = await fetch('/api/health/metrics');
+            const data = await response.json();
+            
+            // Update CPU
+            document.getElementById('cpu-usage').textContent = `${data.cpu}%`;
+            document.getElementById('cpu-bar').style.width = `${data.cpu}%`;
+            
+            // Update Memory
+            document.getElementById('memory-usage').textContent = `${data.memory.percent}%`;
+            document.getElementById('memory-bar').style.width = `${data.memory.percent}%`;
+            document.getElementById('memory-used').textContent = formatBytes(data.memory.used);
+            document.getElementById('memory-total').textContent = formatBytes(data.memory.total);
+            
+            // Update Disk
+            document.getElementById('disk-usage').textContent = `${data.disk.percent}%`;
+            document.getElementById('disk-bar').style.width = `${data.disk.percent}%`;
+            document.getElementById('disk-used').textContent = formatBytes(data.disk.used);
+            document.getElementById('disk-total').textContent = formatBytes(data.disk.total);
+            
+            // Update Uptime
+            document.getElementById('last-boot').textContent = data.uptime;
+            
+            // Update Chart
+            const timestamp = new Date().toLocaleTimeString();
+            metricsChart.data.labels.push(timestamp);
+            metricsChart.data.datasets[0].data.push(data.cpu);
+            metricsChart.data.datasets[1].data.push(data.memory.percent);
+            metricsChart.data.datasets[2].data.push(data.disk.percent);
+            
+            // Keep only last 30 data points
+            if (metricsChart.data.labels.length > 30) {
+                metricsChart.data.labels.shift();
+                metricsChart.data.datasets.forEach(dataset => dataset.data.shift());
+            }
+            
+            metricsChart.update();
+        } catch (error) {
+            console.error('Failed to update metrics:', error);
+            showToast('Failed to update metrics', 'error');
+        }
+    }
+
+    // Update metrics every 2 seconds
+    updateMetrics();
+    setInterval(updateMetrics, 2000);
+</script>
+{% endblock %}
