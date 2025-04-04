@@ -23,8 +23,8 @@ A modern, web-based Network Video Recorder system built with Flask and Tailwind 
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/python-nvr-system.git
-cd python-nvr-system
+git clone https://github.com/ranjanjyoti152/Vision.git
+cd Vision
 ```
 
 2. Install required packages:
