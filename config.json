@@ -1,0 +1,14 @@
+{
+  "cameras": [
+    {
+      "id": 1,
+      "name": "camera1",
+      "rtsp_url": "rtsp://admin:admin@123@122.180.250.253:554/0",
+      "enabled": true
+    }
+  ],
+  "recording_settings": {
+    "storage_directory": "./recordings",
+    "retention_days": 7
+  }
+}

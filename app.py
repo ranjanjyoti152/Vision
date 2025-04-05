@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, send_file
+from flask import Flask, render_template, request, jsonify, send_file, Response
 from datetime import datetime
 import os
 from camera_manager import CameraManager
@@ -9,17 +9,37 @@ from logger import logger
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(24)
 
+from stream_handler import StreamHandler
+
 # Initialize components
 camera_manager = CameraManager()
 system_monitor = SystemMonitor()
 video_recorder = VideoRecorder()
+stream_handler = StreamHandler()
 
 @app.route('/')
 @app.route('/dashboard')
 def dashboard():
     """Render dashboard with camera streams"""
     cameras = camera_manager.list_cameras()
+    # Start streams for all cameras
+    for camera in cameras:
+        stream_handler.start_stream(camera['id'], camera['rtsp_url'])
     return render_template('dashboard.html', cameras=cameras)
+
+@app.route('/stream/<int:camera_id>')
+def stream(camera_id):
+    """Stream endpoint that converts RTSP to MJPEG"""
+    cameras = camera_manager.list_cameras()
+    camera = next((c for c in cameras if c['id'] == camera_id), None)
+    
+    if not camera:
+        return "Camera not found", 404
+        
+    return Response(
+        stream_handler.generate_mjpeg(camera_id),
+        mimetype='multipart/x-mixed-replace; boundary=frame'
+    )
 
 @app.route('/playback')
 def playback():

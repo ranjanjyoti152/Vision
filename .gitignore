@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 *.so
 .Python
+env/
 build/
 develop-eggs/
 dist/
@@ -15,15 +16,17 @@ lib64/
 parts/
 sdist/
 var/
-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
 
+# Logs and recordings
+logs/
+recordings/
+
 # Virtual Environment
 venv/
 ENV/
-env/
 
 # IDE
 .idea/
@@ -31,12 +34,6 @@ env/
 *.swp
 *.swo
 
-# Project specific
-recordings/
-logs/
-*.log
-config.json
-
-# System specific
+# OS
 .DS_Store
 Thumbs.db
